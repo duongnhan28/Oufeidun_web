@@ -1,0 +1,3 @@
+<?php $heroTitle='Sản phẩm'; $heroDescription='Các dòng kính cường lực Caballo chất lượng cao dành cho Android và iPhone.'; require BASE_PATH.'/app/Views/partials/page-hero.php'; ?>
+<section class="section-padding bg-gray-50"><div class="container-custom"><div class="mx-auto mb-7 max-w-2xl text-center"><p class="font-semibold text-primary-600">Danh mục sản phẩm</p><h2 class="heading-2 mt-2">Kính cường lực Oufeidun</h2><p class="mt-3 leading-7 text-slate-600">Lựa chọn sản phẩm theo dòng máy, thông số và nhu cầu sử dụng.</p></div><div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"><?php foreach($products as $product) require BASE_PATH.'/app/Views/partials/product-card.php'; ?></div></div></section>
+

@@ -1,0 +1,2 @@
+<section class="flex min-h-[70vh] items-center justify-center bg-slate-50 px-4 pt-24 text-center"><div><p class="text-6xl font-bold text-primary-500">404</p><h1 class="mt-4 text-2xl font-bold">Không tìm thấy trang</h1><p class="mt-2 text-slate-600">Nội dung bạn yêu cầu không tồn tại hoặc đã được di chuyển.</p><a href="/" class="mt-6 inline-flex rounded-xl bg-primary-500 px-6 py-3 font-semibold text-white">Về trang chủ</a></div></section>
+

@@ -1,0 +1,2 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?= e($title ?? 'Quản trị Oufeidun') ?></title><link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/assets/css/php-overrides.css"><script>window.OUFEIDUN={csrf:<?= json_encode(csrf_token()) ?>};</script><script src="/assets/js/app.js" defer></script></head><body class="bg-slate-100 text-dark"><?= $content ?></body></html>
+
