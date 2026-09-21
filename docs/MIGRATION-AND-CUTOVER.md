@@ -4,7 +4,7 @@
 
 - Source PostgreSQL/Supabase không bị sửa hoặc xóa.
 - Import MySQL theo `legacy_id`, có thể chạy lại mà không tạo dữ liệu trùng.
-- Website và app bán hàng cùng dùng một MySQL nhưng chỉ backend PHP được giữ thông tin kết nối.
+- Website và app bán hàng cùng dùng một máy chủ MySQL nhưng tách thành `oufeidun_web` và `oufeidun_app`; chỉ backend PHP được giữ thông tin kết nối.
 - App Electron gọi API HTTPS; tuyệt đối không nhúng username/password MySQL vào bộ cài.
 - Ảnh được đối chiếu bằng ID, MIME, kích thước và checksum trước khi nghiệm thu.
 
@@ -17,7 +17,7 @@
 
 ## Thông tin còn chờ
 
-- MySQL host, port, database, username và password.
+- MySQL production: host, port, username, password và quyền truy cập hai schema.
 - Phiên bản MySQL/MariaDB thực tế của hosting.
 - Document root và quyền chạy PHP CLI/Cron.
 - Cấu hình SMTP.
@@ -33,4 +33,3 @@
 6. Import delta cuối cùng và đối chiếu tồn kho/hóa đơn nếu app bán hàng đã tham gia.
 7. Chuyển domain, phát hành cấu hình API mới cho app Electron.
 8. Giữ Supabase ở trạng thái chỉ đọc tối thiểu 2–4 tuần để rollback.
-

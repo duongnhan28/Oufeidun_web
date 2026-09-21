@@ -24,6 +24,20 @@ try{
 }catch(Throwable$error){if($pdo->inTransaction())$pdo->rollBack();fwrite(STDERR,"Import failed: {$error->getMessage()}\n");exit(1);}
 function sqlDate(?string$value):?string{return$value?date('Y-m-d H:i:s',strtotime($value)):null;}
 function lookupText(string$value):string{$ascii=iconv('UTF-8','ASCII//TRANSLIT//IGNORE',trim($value));$ascii=strtoupper($ascii===false?$value:$ascii);return trim((string)preg_replace('/[^A-Z0-9]+/',' ',$ascii));}
-function normalizeModel(string$raw):array{$compact=trim((string)preg_replace('/\s+/u',' ',$raw));$privacy=(bool)preg_match('/\(\s*CH[ỐO]NG\s+NH[ÌI]N\s+TR[ỘO]M\s*\)/iu',$compact);$display=trim((string)preg_replace('/\s*\(\s*CH[ỐO]NG\s+NH[ÌI]N\s+TR[ỘO]M\s*\)\s*/iu',' ',$compact));$normalized=lookupText($display);$brand='other';foreach(['IP'=>'apple','IPHONE'=>'apple','SAM'=>'samsung','SAMSUNG'=>'samsung','OPPO'=>'oppo','VIVO'=>'vivo','REALME'=>'realme','REDMI'=>'xiaomi','XIAOMI'=>'xiaomi','RM'=>'xiaomi','POCO'=>'poco','MOTOROLA'=>'motorola','HUAWEI'=>'huawei','TECNO'=>'tecno','HONOR'=>'honor','ONEPLUS'=>'oneplus','INFINIX'=>'infinix','ZTE'=>'zte','IQOO'=>'iqoo','LG'=>'lg']as$prefix=>$candidate){if(preg_match('/^'.preg_quote($prefix,'/').'\b/',$normalized)){$brand=$candidate;break;}}$review=substr_count($compact,'(')!==substr_count($compact,')')||preg_match('/[\x{3400}-\x{9fff}]/u',$compact)?'needs_review':'clean';return['display'=>$display,'normalized'=>$normalized,'brand'=>$brand,'type'=>$privacy?'privacy':'standard','review'=>$review];}
+function normalizeModel(string $raw): array
+{
+    $compact = trim((string)preg_replace('/\s+/u', ' ', $raw));
+    $privacy = (bool)preg_match('/\(\s*CH[ỐO]NG\s+NH[ÌI]N\s+TR[ỘO]M\s*\)/iu', $compact);
+    $display = trim((string)preg_replace('/\s*\(\s*CH[ỐO]NG\s+NH[ÌI]N\s+TR[ỘO]M\s*\)\s*/iu', ' ', $compact));
+    $normalized = lookupText($display);
+    $brand = 'other';
+    foreach (['IP'=>'apple','IPHONE'=>'apple','SAM'=>'samsung','SAMSUNG'=>'samsung','OPPO'=>'oppo','VIVO'=>'vivo','REALME'=>'realme','REDMI'=>'xiaomi','XIAOMI'=>'xiaomi','RM'=>'xiaomi','POCO'=>'poco','MOTOROLA'=>'motorola','HUAWEI'=>'huawei','TECNO'=>'tecno','HONOR'=>'honor','ONEPLUS'=>'oneplus','INFINIX'=>'infinix','ZTE'=>'zte','IQOO'=>'iqoo','LG'=>'lg'] as $prefix => $candidate) {
+        if (preg_match('/^'.preg_quote($prefix, '/').'\b/', $normalized)) { $brand = $candidate; break; }
+    }
+    $normalized = preg_replace('/^IP(?=\s|$)/', 'IPHONE', $normalized) ?? $normalized;
+    $normalized = preg_replace('/^SAM(?=\s|$)/', 'SAMSUNG', $normalized) ?? $normalized;
+    $normalized = preg_replace('/^RM(?=\s|$)/', 'REDMI', $normalized) ?? $normalized;
+    $review = substr_count($compact, '(') !== substr_count($compact, ')') || preg_match('/[\x{3400}-\x{9fff}]/u', $compact) ? 'needs_review' : 'clean';
+    return ['display'=>$display,'normalized'=>$normalized,'brand'=>$brand,'type'=>$privacy?'privacy':'standard','review'=>$review];
+}
 function downloadImage(string$url):array{$context=stream_context_create(['http'=>['timeout'=>30,'follow_location'=>1,'user_agent'=>'OufeidunMigration/1.0']]);$data=file_get_contents($url,false,$context);if($data===false||strlen($data)>5242880)throw new RuntimeException('Invalid image download: '.$url);$mime=(new finfo(FILEINFO_MIME_TYPE))->buffer($data);if(!in_array($mime,['image/jpeg','image/png','image/webp'],true)||!getimagesizefromstring($data))throw new RuntimeException('Invalid image MIME: '.$url);return['mime'=>$mime,'data'=>$data];}
-

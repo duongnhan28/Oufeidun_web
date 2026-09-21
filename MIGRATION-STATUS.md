@@ -22,7 +22,9 @@
 - [x] Viết importer dry-run/apply cho snapshot tra cứu 44 SKU, 772 model và 88 ảnh.
 - [x] Kết nối MySQL local 8.0.46, tạo đủ 28 bảng và nhập thành công 44 SKU, 772 model, 88 quan hệ ảnh cùng 88 tệp ảnh.
 - [ ] Viết importer cho sản phẩm marketing, tài khoản, liên hệ và dữ liệu app khi có quyền đọc DB nguồn/đích.
-- [x] Tạo schema MySQL riêng cho nghiệp vụ app bán hàng trong cùng database.
+- [x] Tách dữ liệu thành hai schema MySQL `oufeidun_web` và `oufeidun_app`, dùng chung máy chủ và tài khoản kết nối.
+- [x] Kiểm thử cách ly schema: web không thấy bảng app, app không thấy bảng web; migration chạy lại không tạo trùng.
+- [x] Smoke test route public, ba trang chi tiết sản phẩm, ảnh, tra cứu alias, form liên hệ, đăng nhập admin và API app.
 - [x] Xây API đăng nhập/session, workspace, mutation, báo cáo, nhân viên và ảnh cho app.
 - [ ] Thay adapter `src/data/client.ts` của app sau khi có URL API thử nghiệm.
 - [ ] Import và đối chiếu dữ liệu app bán hàng từ Supabase.
