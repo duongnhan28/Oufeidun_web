@@ -20,6 +20,7 @@
 - [x] Hoàn thiện gửi SMTP tự chứa, không phụ thuộc package ngoài.
 - [x] Hoàn thiện tương tác form CRUD sản phẩm, upload ảnh và mã kính.
 - [x] Viết importer dry-run/apply cho snapshot tra cứu 44 SKU, 772 model và 88 ảnh.
+- [x] Kết nối MySQL local 8.0.46, tạo đủ 28 bảng và nhập thành công 44 SKU, 772 model, 88 quan hệ ảnh cùng 88 tệp ảnh.
 - [ ] Viết importer cho sản phẩm marketing, tài khoản, liên hệ và dữ liệu app khi có quyền đọc DB nguồn/đích.
 - [x] Tạo schema MySQL riêng cho nghiệp vụ app bán hàng trong cùng database.
 - [x] Xây API đăng nhập/session, workspace, mutation, báo cáo, nhân viên và ảnh cho app.
@@ -28,4 +29,4 @@
 - [ ] Chạy visual regression desktop/mobile.
 - [ ] Chạy UAT và cutover production.
 
-Database thật chưa được kết nối vì đang chờ thông tin do chủ dự án cung cấp.
+Database local đã được kết nối và kiểm thử. Database production vẫn chờ thông tin hosting để chạy migration, nhập dữ liệu và cutover.
