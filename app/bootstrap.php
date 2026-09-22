@@ -43,6 +43,7 @@ function asset(string $path): string
 
 function view(string $name, array $data = [], string $layout = 'layouts/app'): void
 {
+    $site = require BASE_PATH . '/config/site.php';
     extract($data, EXTR_SKIP);
     ob_start();
     require BASE_PATH . '/app/Views/' . $name . '.php';
