@@ -38,6 +38,24 @@
     return `<article class="lookup-result min-h-[202px] rounded-2xl border border-slate-200 bg-slate-50 p-3.5 lg:min-h-[162px]"><div class="flex gap-3">${images ? `<div class="grid h-28 w-28 shrink-0 gap-1.5 sm:h-[132px] sm:w-36 ${item.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}">${images}</div>` : ''}<div class="min-w-0 flex-1"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><strong class="block truncate text-base tracking-wide text-slate-950">${escapeHtml(item.sku)}</strong><p class="mt-0.5 line-clamp-1 text-xs text-slate-600">${escapeHtml(item.name)}</p></div><span class="text-emerald-600">✓</span></div><div class="mt-2 flex flex-wrap gap-1.5">${types}</div><p class="mt-2 text-[11px] font-semibold text-slate-600">Dùng chung với ${models.length} dòng máy:</p><div class="mt-1.5 flex flex-wrap gap-1.5">${chips}</div></div></div></article>`;
   };
 
+  let mobileLookupDialog;
+  const closeMobileLookup = () => {
+    mobileLookupDialog?.remove(); mobileLookupDialog = null;
+    document.body.style.overflow = '';
+  };
+  const showMobileLookup = (query, body) => {
+    if (window.innerWidth >= 1024) return;
+    closeMobileLookup();
+    mobileLookupDialog = document.createElement('section');
+    mobileLookupDialog.className = 'fixed inset-x-3 bottom-3 z-[110] h-[318px] overflow-hidden rounded-[1.75rem] border border-amber-200 bg-white p-4 text-slate-950 shadow-2xl lg:hidden';
+    mobileLookupDialog.setAttribute('role', 'dialog');
+    mobileLookupDialog.setAttribute('aria-label', `Kết quả tra cứu ${query}`);
+    mobileLookupDialog.innerHTML = `<div class="flex items-start justify-between gap-3"><div><strong>Kết quả cho “${escapeHtml(query)}”</strong><span class="block text-xs text-slate-500">${body.total} mã kính phù hợp</span></div><button type="button" data-mobile-lookup-close aria-label="Đóng kết quả" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-xl text-slate-500">×</button></div><div class="lookup-scroll mt-3 h-[238px] space-y-2.5 overflow-y-auto pr-2">${body.items?.length ? body.items.map(resultCard).join('') : '<div class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">Chưa tìm thấy mã phù hợp.</div>'}</div>`;
+    document.body.appendChild(mobileLookupDialog);
+    document.body.style.overflow = 'hidden';
+    mobileLookupDialog.querySelector('[data-mobile-lookup-close]')?.addEventListener('click', closeMobileLookup);
+  };
+
   document.querySelectorAll('[data-lookup]').forEach(root => {
     const form = root.querySelector('form');
     const input = root.querySelector('[data-lookup-input]');
@@ -57,12 +75,54 @@
         if (!response.ok) throw new Error(body.error || 'Không thể tra cứu lúc này.');
         summary.innerHTML = `<strong>Kết quả cho “${escapeHtml(query)}”</strong><span class="block text-xs text-slate-500">${body.total} mã kính phù hợp</span>`;
         list.innerHTML = body.items?.length ? body.items.map(resultCard).join('') : '<div class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">Chưa tìm thấy mã phù hợp.</div>';
+        showMobileLookup(query, body);
       } catch (cause) {
         if (cause.name !== 'AbortError') list.innerHTML = `<div class="rounded-2xl bg-red-50 p-4 text-sm text-red-700">${escapeHtml(cause.message)}</div>`;
       }
     };
     form?.addEventListener('submit', event => { event.preventDefault(); search(input.value); });
     root.querySelectorAll('[data-lookup-example]').forEach(button => button.addEventListener('click', () => { input.value = button.dataset.lookupExample; search(input.value); }));
+  });
+
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMobileLookup(); });
+
+  document.querySelectorAll('[data-product-gallery]').forEach(gallery => {
+    const images = JSON.parse(gallery.dataset.images || '[]');
+    const main = gallery.querySelector('[data-gallery-main]');
+    const counter = gallery.querySelector('[data-gallery-counter]');
+    let active = 0;
+    const select = index => {
+      if (!images.length) return;
+      active = (index + images.length) % images.length;
+      main.src = images[active];
+      if (dialog && !dialog.hidden) dialog.querySelector('img').src = images[active];
+      if (counter) counter.textContent = `${active + 1} / ${images.length}`;
+      gallery.querySelectorAll('[data-gallery-thumb]').forEach((thumb, i) => {
+        thumb.classList.toggle('border-primary-500', i === active);
+        thumb.classList.toggle('border-slate-200', i !== active);
+      });
+    };
+    gallery.querySelector('[data-gallery-prev]')?.addEventListener('click', () => select(active - 1));
+    gallery.querySelector('[data-gallery-next]')?.addEventListener('click', () => select(active + 1));
+    gallery.querySelectorAll('[data-gallery-thumb]').forEach(button => button.addEventListener('click', () => select(Number(button.dataset.galleryThumb))));
+    gallery.querySelector('[data-gallery-open]')?.addEventListener('click', () => {
+      if (!dialog) return; dialog.querySelector('img').src = images[active]; dialog.hidden = false;
+    });
+    gallery.addEventListener('keydown', event => {
+      if (event.key === 'ArrowLeft') select(active - 1);
+      if (event.key === 'ArrowRight') select(active + 1);
+    });
+    document.addEventListener('keydown', event => {
+      if (!dialog || dialog.hidden) return;
+      if (event.key === 'ArrowLeft') select(active - 1);
+      if (event.key === 'ArrowRight') select(active + 1);
+    });
+  });
+
+  document.querySelectorAll('[data-video-collection]').forEach(collection => {
+    if (collection.dataset.autoplayAll === 'true') return;
+    const videos = [...collection.querySelectorAll('video')];
+    videos.forEach(video => video.addEventListener('play', () => videos.forEach(other => { if (other !== video) other.pause(); })));
   });
 
   document.querySelectorAll('[data-contact-form]').forEach(form => form.addEventListener('submit', async event => {
@@ -115,4 +175,19 @@
     form.addEventListener('submit',async event=>{event.preventDefault();const id=form.elements.id.value;const models=lines(form.elements.models.value).map(line=>{const[name,type='standard']=line.split('|').map(value=>value.trim());return{name,glassType:['standard','privacy','unknown'].includes(type)?type:'standard'};});const payload={sku:form.elements.sku.value,name:form.elements.name.value,description:form.elements.description.value,models,images:lines(form.elements.images.value).slice(0,2),active:form.elements.active.checked};status.textContent='Đang lưu...';try{const response=await fetch(id?`/api/admin/glass-lookup/${id}`:'/api/admin/glass-lookup',{method:id?'PUT':'POST',headers,body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw new Error(result.error||'Không thể lưu mã kính.');location.reload();}catch(error){status.textContent=error.message;}});
     form.querySelector('[data-lookup-delete]')?.addEventListener('click',async()=>{const id=form.elements.id.value;if(!id||!confirm('Xóa mã kính này?'))return;const response=await fetch(`/api/admin/glass-lookup/${id}`,{method:'DELETE',headers});const result=await response.json();if(response.ok)location.reload();else status.textContent=result.error||'Không thể xóa.';});
   }
+
+  document.querySelectorAll('[data-message-send]').forEach(button => button.addEventListener('click', async () => {
+    const status = button.closest('article')?.querySelector('[data-mail-status]');
+    button.disabled = true; button.textContent = 'Đang gửi...';
+    try {
+      const response = await fetch(`/api/admin/messages/${button.dataset.messageSend}/send`, { method:'POST', headers });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể gửi email.');
+      if (status) status.textContent = 'sent';
+      button.textContent = 'Đã gửi';
+    } catch (error) {
+      if (status) status.textContent = 'failed';
+      button.textContent = 'Thử lại'; alert(error.message);
+    } finally { button.disabled = false; }
+  }));
 })();
