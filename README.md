@@ -10,7 +10,7 @@ Bản migration 1–1 từ website Next.js Oufeidun sang PHP 8.2 + MySQL 8, tố
 
 ## Chạy sau khi có database
 
-1. Sao chép `.env.example` thành `.env`, cấu hình `DB_WEB_DATABASE` và `DB_APP_DATABASE` cùng tài khoản MySQL có quyền trên cả hai schema.
+1. Sao chép `.env.example` thành `.env`, cấu hình `DB_WEB_DATABASE` và `DB_APP_DATABASE`. Có thể dùng một MySQL user chung; production nên cấp user riêng cho từng schema nếu hosting hỗ trợ.
 2. Trỏ domain tới `public/`.
 3. Chạy `php scripts/migrate.php`.
 4. Tạo tài khoản quản trị web bằng `php scripts/create-admin.php <username> <password>`.

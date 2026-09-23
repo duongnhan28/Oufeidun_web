@@ -50,6 +50,7 @@ $router->post('/api/app/v1/auth/login', fn() => $pos->login());
 $router->post('/api/app/v1/auth/logout', fn() => $pos->logout());
 $router->post('/api/app/v1/session/touch', fn() => $pos->touch());
 $router->get('/api/app/v1/workspace', fn() => $pos->workspace());
+$router->post('/api/app/v1/query', fn() => $pos->query());
 $router->post('/api/app/v1/mutations', fn() => $pos->mutate());
 $router->post('/api/app/v1/products/delete', fn() => $pos->deleteProduct());
 $router->post('/api/app/v1/reports', fn() => $pos->report());

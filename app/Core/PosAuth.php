@@ -10,6 +10,7 @@ final class PosAuth
         $pdo = Database::appConnection();
         $pdo->beginTransaction();
         try {
+            $pdo->exec('DELETE FROM pos_sessions WHERE expires_at <= NOW()');
             $pdo->prepare('INSERT IGNORE INTO pos_login_limits(ip) VALUES(?)')->execute([$ip]);
             $s = $pdo->prepare('SELECT * FROM pos_login_limits WHERE ip=? FOR UPDATE');
             $s->execute([$ip]);

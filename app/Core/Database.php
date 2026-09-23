@@ -17,7 +17,7 @@ final class Database
             return self::$connection;
         }
 
-        self::$connection = self::connect('DB_WEB_DATABASE');
+        self::$connection = self::connect('DB_WEB_DATABASE', 'DB_WEB_USERNAME', 'DB_WEB_PASSWORD');
         return self::$connection;
     }
 
@@ -27,16 +27,16 @@ final class Database
             return self::$appConnection;
         }
 
-        self::$appConnection = self::connect('DB_APP_DATABASE');
+        self::$appConnection = self::connect('DB_APP_DATABASE', 'DB_APP_USERNAME', 'DB_APP_PASSWORD');
         return self::$appConnection;
     }
 
-    private static function connect(string $databaseKey): PDO
+    private static function connect(string $databaseKey, string $usernameKey, string $passwordKey): PDO
     {
 
         $host = Env::get('DB_HOST');
         $database = Env::get($databaseKey, Env::get('DB_DATABASE'));
-        $username = Env::get('DB_USERNAME');
+        $username = Env::get($usernameKey) ?: Env::get('DB_USERNAME');
         if (!$host || !$database || !$username) {
             throw new RuntimeException('Database chưa được cấu hình. Hãy cập nhật file .env.');
         }
@@ -44,7 +44,9 @@ final class Database
         $port = Env::get('DB_PORT', '3306');
         $charset = Env::get('DB_CHARSET', 'utf8mb4');
         $dsn = "mysql:host={$host};port={$port};dbname={$database};charset={$charset}";
-        $pdo = new PDO($dsn, $username, Env::get('DB_PASSWORD', ''), [
+        $password = Env::get($passwordKey);
+        if ($password === null || $password === '') $password = Env::get('DB_PASSWORD', '');
+        $pdo = new PDO($dsn, $username, $password, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,

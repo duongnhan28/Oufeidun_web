@@ -10,6 +10,7 @@ Mọi endpoint sau đăng nhập dùng header `Authorization: Bearer <access_tok
 | `touch_session` | `POST /session/touch` |
 | `release_session` | `POST /auth/logout` |
 | `app_ban_hang_read` | `GET /workspace` |
+| Lịch sử biến động kho | `POST /query` với `action=history` |
 | `app_ban_hang_write` | `POST /mutations` |
 | `app_ban_hang_delete_product` | `POST /products/delete` |
 | `app_ban_hang_report` | `POST /reports` |
@@ -28,4 +29,6 @@ Các bảo vệ đã giữ lại trong backend PHP:
 - Chặn thiếu tồn, thay đổi giá giữa lúc lập đơn, trả vượt số lượng đã bán.
 - Giữ snapshot SKU, tên, giá bán và giá vốn trên giao dịch.
 - Soft-delete sản phẩm/nhân viên để giữ lịch sử.
-
+- CORS chỉ chấp nhận origin khai báo trong `APP_API_ALLOWED_ORIGINS`; production bắt buộc dùng HTTPS.
+- JSON thường giới hạn 1 MB, ảnh giới hạn 5 MB và được kiểm tra MIME thực tế.
+- Desktop không có tài khoản/mật khẩu MySQL; hai schema có thể dùng hai MySQL user riêng theo nguyên tắc quyền tối thiểu.

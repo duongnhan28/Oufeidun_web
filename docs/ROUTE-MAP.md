@@ -17,6 +17,6 @@
 | CRUD sản phẩm | `/api/admin/products*` | Đã chuyển backend |
 | Upload ảnh | `/api/admin/images` | Đã chuyển backend |
 | CRUD mã kính | `/api/admin/glass-lookup*` | Đã chuyển backend |
+| API app bán hàng | `/api/app/v1/*` | Đã chuyển sang PHP/MySQL và kiểm thử local |
 
-UI admin thao tác đầy đủ và API cho app bán hàng sẽ được hoàn thiện/kiểm thử sau khi có database MySQL thử nghiệm.
-
+UI admin và API app bán hàng đã hoàn thiện ở mức source/local. Cấu hình SMTP, domain HTTPS, tài khoản MySQL production và kiểm thử trên hosting sẽ thực hiện sau khi mua gói.
