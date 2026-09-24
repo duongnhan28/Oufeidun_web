@@ -32,18 +32,21 @@ if (!preg_match('/^[A-Za-z0-9_]+$/', $collation)) {
     fwrite(STDERR, "Collation không hợp lệ.\n");
     exit(1);
 }
-$server = new PDO(
-    "mysql:host={$host};port={$port};charset={$charset}",
-    Env::get('DB_USERNAME', ''),
-    Env::get('DB_PASSWORD', ''),
-    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-);
-$server->exec("CREATE DATABASE IF NOT EXISTS `{$webDatabase}` CHARACTER SET utf8mb4 COLLATE {$collation}");
-$server->exec("CREATE DATABASE IF NOT EXISTS `{$appDatabase}` CHARACTER SET utf8mb4 COLLATE {$collation}");
+if (filter_var(Env::get('DB_CREATE_DATABASES', 'false'), FILTER_VALIDATE_BOOLEAN)) {
+    $server = new PDO(
+        "mysql:host={$host};port={$port};charset={$charset}",
+        Env::get('DB_USERNAME', ''),
+        Env::get('DB_PASSWORD', ''),
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
+    $server->exec("CREATE DATABASE IF NOT EXISTS `{$webDatabase}` CHARACTER SET utf8mb4 COLLATE {$collation}");
+    $server->exec("CREATE DATABASE IF NOT EXISTS `{$appDatabase}` CHARACTER SET utf8mb4 COLLATE {$collation}");
+}
 
 applyMigration(Database::connection(), BASE_PATH . '/database/migrations/001_website_schema.sql');
 applyMigration(Database::connection(), BASE_PATH . '/database/migrations/003_web_seed_products.sql');
 applyMigration(Database::appConnection(), BASE_PATH . '/database/migrations/002_pos_schema.sql');
+applyMigration(Database::appConnection(), BASE_PATH . '/database/migrations/004_pos_order_sales_feedback.sql');
 
 function applyMigration(PDO $pdo, string $file): void
 {

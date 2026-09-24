@@ -10,7 +10,7 @@ Bản migration 1–1 từ website Next.js Oufeidun sang PHP 8.2 + MySQL 8, tố
 
 ## Chạy sau khi có database
 
-1. Sao chép `.env.example` thành `.env`, cấu hình `DB_WEB_DATABASE` và `DB_APP_DATABASE`. Có thể dùng một MySQL user chung; production nên cấp user riêng cho từng schema nếu hosting hỗ trợ.
+1. Tạo sẵn hai database trong control panel hosting, sau đó sao chép `.env.example` thành `.env` và cấu hình `DB_WEB_DATABASE`, `DB_APP_DATABASE`. Có thể dùng một MySQL user chung; production nên cấp user riêng cho từng schema nếu hosting hỗ trợ. Chỉ đặt `DB_CREATE_DATABASES=true` khi user MySQL có quyền tạo database.
 2. Trỏ domain tới `public/`.
 3. Chạy `php scripts/migrate.php`.
 4. Tạo tài khoản quản trị web bằng `php scripts/create-admin.php <username> <password>`.
@@ -20,3 +20,5 @@ Bản migration 1–1 từ website Next.js Oufeidun sang PHP 8.2 + MySQL 8, tố
 Không commit `.env`, file export database hoặc thông tin bí mật lên Git.
 
 Website và app dùng chung một máy chủ MySQL nhưng tách dữ liệu thành hai schema: `oufeidun_web` và `oufeidun_app`.
+
+App desktop production chỉ nhận hai URL HTTPS công khai: `/api/app/v1` và `/api/glass-lookup`. Host, user và mật khẩu MySQL chỉ nằm trong `.env` của PHP trên server, không được đóng gói vào app.

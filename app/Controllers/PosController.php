@@ -12,13 +12,83 @@ final class PosController
     public function logout():never{PosAuth::logout();Response::json(['ok'=>true]);}
     public function workspace():never
     {
-        try{$actor=PosAuth::actor();$pdo=Database::appConnection();$brands=$pdo->query('SELECT id,name FROM pos_glass_brands ORDER BY name')->fetchAll();$products=$pdo->query("SELECT p.id,p.sku,p.name,p.glass_type,p.models,p.brand,p.glass_brand_id,p.image_path,CAST(p.sale_price AS CHAR) sale_price,p.active,p.version,p.price_version,b.on_hand,b.version stock_version,".($actor['role']==='admin'?"CAST(c.fixed_cost AS CHAR)":"NULL")." fixed_cost FROM pos_products p JOIN pos_inventory_balances b ON b.product_id=p.id JOIN pos_product_costs c ON c.product_id=p.id WHERE p.deleted_at IS NULL ORDER BY p.sku LIMIT 5000")->fetchAll();foreach($products as&$p){$p['models']=json_decode($p['models'],true)?:[];$p['active']=(bool)$p['active'];$p['on_hand']=(int)$p['on_hand'];$p['version']=(int)$p['version'];$p['price_version']=(int)$p['price_version'];$p['stock_version']=(int)$p['stock_version'];if($actor['role']!=='admin')unset($p['fixed_cost']);}$orders=$this->orders($pdo);$users=$actor['role']==='admin'?$pdo->query("SELECT id,display_name,role,active FROM pos_users WHERE deleted_at IS NULL ORDER BY FIELD(role,'admin','staff'),created_at")->fetchAll():[];foreach($users as&$u)$u['active']=(bool)$u['active'];$logs=$actor['role']==='admin'?$pdo->query('SELECT l.id,l.action,u.display_name actor_name,l.created_at,l.detail FROM pos_audit_logs l JOIN pos_users u ON u.id=l.actor_id ORDER BY l.created_at DESC LIMIT 200')->fetchAll():[];Response::json(['me'=>PosAuth::publicUser($actor),'glass_brands'=>$brands,'products'=>$products,'orders'=>$orders,'users'=>$users,'logs'=>$logs]);}catch(\Throwable$error){$this->fail($error);}
+        try{$actor=PosAuth::actor();$pdo=Database::appConnection();$brands=$pdo->query('SELECT id,name FROM pos_glass_brands ORDER BY name')->fetchAll();$products=$pdo->query("SELECT p.id,p.sku,p.name,p.glass_type,p.models,p.brand,p.glass_brand_id,p.image_path,CAST(p.sale_price AS CHAR) sale_price,p.active,p.version,p.price_version,b.on_hand,b.version stock_version,".($actor['role']==='admin'?"CAST(c.fixed_cost AS CHAR)":"NULL")." fixed_cost FROM pos_products p JOIN pos_inventory_balances b ON b.product_id=p.id JOIN pos_product_costs c ON c.product_id=p.id WHERE p.deleted_at IS NULL ORDER BY p.sku LIMIT 5000")->fetchAll();foreach($products as&$p){$p['models']=json_decode($p['models'],true)?:[];$p['active']=(bool)$p['active'];$p['on_hand']=(int)$p['on_hand'];$p['version']=(int)$p['version'];$p['price_version']=(int)$p['price_version'];$p['stock_version']=(int)$p['stock_version'];if($actor['role']!=='admin')unset($p['fixed_cost']);}$orders=$this->orders($pdo,$actor);$users=$actor['role']==='admin'?$pdo->query("SELECT id,display_name,role,active FROM pos_users WHERE deleted_at IS NULL ORDER BY FIELD(role,'admin','staff'),created_at")->fetchAll():[];foreach($users as&$u)$u['active']=(bool)$u['active'];$logs=$actor['role']==='admin'?$pdo->query('SELECT l.id,l.action,u.display_name actor_name,l.created_at,l.detail FROM pos_audit_logs l JOIN pos_users u ON u.id=l.actor_id ORDER BY l.created_at DESC LIMIT 200')->fetchAll():[];Response::json(['me'=>PosAuth::publicUser($actor),'glass_brands'=>$brands,'products'=>$products,'orders'=>$orders,'users'=>$users,'logs'=>$logs]);}catch(\Throwable$error){$this->fail($error);}
     }
     public function query():never
     {
         try{$actor=PosAuth::actor();$d=$this->json();if(($d['action']??'')!=='history')throw new \RuntimeException('VALIDATION_ERROR');$productId=(string)($d['product_id']??'');if(!preg_match('/^[a-f0-9-]{36}$/i',$productId))throw new \RuntimeException('VALIDATION_ERROR');$pdo=Database::appConnection();$exists=$pdo->prepare('SELECT 1 FROM pos_products WHERE id=? AND deleted_at IS NULL');$exists->execute([$productId]);if(!$exists->fetchColumn())throw new \RuntimeException('PRODUCT_NOT_FOUND');$s=$pdo->prepare('SELECT movement_type,quantity_delta,balance_after,occurred_at FROM pos_inventory_movements WHERE product_id=? ORDER BY occurred_at DESC,id DESC LIMIT 500');$s->execute([$productId]);Response::json($s->fetchAll());}catch(\Throwable$error){$this->fail($error);}
     }
     public function mutate():never{try{$actor=PosAuth::actor();$result=(new PosService(Database::appConnection()))->mutate($actor,$this->json());Response::json($result);}catch(\Throwable$error){$this->fail($error);}}
+    public function orderFeatures():never
+    {
+        try {
+            $actor = PosAuth::actor();
+            $payload = $this->json();
+            $action = (string)($payload['action'] ?? '');
+            $orderId = (string)($payload['order_id'] ?? '');
+            if (!preg_match('/^[a-f0-9-]{36}$/i', $orderId)) throw new \RuntimeException('VALIDATION_ERROR');
+            $pdo = Database::appConnection();
+            $pdo->beginTransaction();
+            try {
+                $statement = $pdo->prepare('SELECT * FROM pos_sales_orders WHERE id=? FOR UPDATE');
+                $statement->execute([$orderId]);
+                $order = $statement->fetch();
+                if (!$order || ($actor['role'] !== 'admin' && $order['created_by'] !== $actor['id'])) throw new \RuntimeException('FORBIDDEN');
+
+                if ($action === 'save') {
+                    $items = $payload['items'] ?? null;
+                    $address = trim((string)($payload['customer_address'] ?? ''));
+                    $customerType = (string)($payload['customer_type'] ?? 'retail');
+                    if ($order['status'] !== 'draft') throw new \RuntimeException('INVALID_ORDER_STATE');
+                    if (!is_array($items) || count($items) < 1 || count($items) > 100 || mb_strlen($address) > 500 || !in_array($customerType, ['retail','wholesale'], true)) throw new \RuntimeException('VALIDATION_ERROR');
+                    $seen = [];
+                    foreach ($items as $item) {
+                        $productId = (string)($item['product_id'] ?? '');
+                        $kind = (string)($item['item_kind'] ?? 'sale');
+                        $price = (string)($item['unit_sale_price'] ?? '');
+                        $note = trim((string)($item['item_note'] ?? ''));
+                        if (!preg_match('/^[a-f0-9-]{36}$/i', $productId) || isset($seen[$productId]) || !in_array($kind, ['sale','gift','sample'], true) || !preg_match('/^[0-9]{1,15}$/', $price) || mb_strlen($note) > 500) throw new \RuntimeException('VALIDATION_ERROR');
+                        $seen[$productId] = true;
+                        $line = $pdo->prepare('SELECT id FROM pos_sales_order_items WHERE order_id=? AND product_id=? FOR UPDATE');
+                        $line->execute([$orderId, $productId]);
+                        $lineId = $line->fetchColumn();
+                        if (!$lineId) throw new \RuntimeException('VALIDATION_ERROR');
+                        $effectivePrice = in_array($kind, ['gift','sample'], true) ? '0' : $price;
+                        $update = $pdo->prepare('UPDATE pos_sales_order_items SET custom_unit_price=?,unit_sale_price=?,item_kind=?,item_note=? WHERE id=?');
+                        $update->execute([$effectivePrice, $effectivePrice, $kind, $note, $lineId]);
+                    }
+                    $pdo->prepare('UPDATE pos_sales_orders SET customer_address=?,customer_type=?,total_amount=(SELECT COALESCE(SUM(quantity*unit_sale_price),0) FROM pos_sales_order_items WHERE order_id=?),version=version+1 WHERE id=?')->execute([$address, $customerType, $orderId, $orderId]);
+                    $this->audit($pdo, $actor['id'], 'order.features.update', $orderId);
+                    $pdo->commit();
+                    Response::json(['id'=>$orderId]);
+                }
+
+                if ($action === 'payment') {
+                    $method = (string)($payload['method'] ?? '');
+                    $amount = (string)($payload['amount'] ?? '');
+                    $note = trim((string)($payload['note'] ?? ''));
+                    if (!in_array($order['status'], ['confirmed','partially_returned','returned'], true) || !in_array($method, ['cash','transfer','cod','cod_transfer','cash_transfer'], true) || !preg_match('/^[0-9]{1,15}$/', $amount) || mb_strlen($note) > 500) throw new \RuntimeException('VALIDATION_ERROR');
+                    $paid = $pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM pos_sales_payments WHERE order_id=?');
+                    $paid->execute([$orderId]);
+                    $paidAmount = (int)$paid->fetchColumn();
+                    if ((int)$amount <= 0 || (int)$amount + $paidAmount > (int)$order['total_amount']) throw new \RuntimeException('PAYMENT_EXCEEDS_DUE');
+                    $paymentId = PosService::uuid();
+                    $pdo->prepare('INSERT INTO pos_sales_payments(id,order_id,amount,method,note,created_by) VALUES(?,?,?,?,?,?)')->execute([$paymentId,$orderId,$amount,$method,$note,$actor['id']]);
+                    $pdo->prepare('UPDATE pos_sales_orders SET version=version+1 WHERE id=?')->execute([$orderId]);
+                    $this->audit($pdo, $actor['id'], 'order.payment', $orderId.' / '.$amount);
+                    $pdo->commit();
+                    Response::json(['id'=>$paymentId]);
+                }
+
+                throw new \RuntimeException('VALIDATION_ERROR');
+            } catch (\Throwable $error) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                throw $error;
+            }
+        } catch (\Throwable $error) {
+            $this->fail($error);
+        }
+    }
     public function deleteProduct():never{try{$actor=PosAuth::actor();$result=(new PosService(Database::appConnection()))->deleteProduct($actor,$this->json());Response::json($result);}catch(\Throwable$error){$this->fail($error);}}
     public function report():never
     {
@@ -33,5 +103,24 @@ final class PosController
     public function deleteImage(array$params):never{try{$actor=PosAuth::actor();if($actor['role']!=='admin')throw new \RuntimeException('FORBIDDEN');$path=$params['path']??'';$s=Database::appConnection()->prepare('SELECT 1 FROM pos_products WHERE image_path=? AND deleted_at IS NULL');$s->execute([$path]);if(!$s->fetchColumn())Database::appConnection()->prepare('DELETE FROM pos_product_images WHERE path=?')->execute([$path]);Response::json(['ok'=>true]);}catch(\Throwable$error){$this->fail($error);}}
     private function audit(\PDO$pdo,string$actor,string$action,string$detail):void{$pdo->prepare('INSERT INTO pos_audit_logs(id,actor_id,action,detail) VALUES(?,?,?,?)')->execute([PosService::uuid(),$actor,$action,$detail]);}
     private function clientIp():string{$ip=(string)($_SERVER['REMOTE_ADDR']??'127.0.0.1');$header=trim((string)(Env::get('TRUSTED_PROXY_IP_HEADER','')??''));if($header!==''){$serverKey='HTTP_'.strtoupper(str_replace('-','_',$header));$forwarded=trim(explode(',',(string)($_SERVER[$serverKey]??''))[0]);if(filter_var($forwarded,FILTER_VALIDATE_IP))$ip=$forwarded;}return substr($ip,0,45);}
-    private function orders(\PDO$pdo):array{$orders=$pdo->query("SELECT o.*,CONCAT('DH-',LPAD(o.order_no,5,'0')) order_label,u.display_name creator_name FROM pos_sales_orders o JOIN pos_users u ON u.id=o.created_by WHERE o.status<>'deleted' ORDER BY o.updated_at DESC LIMIT 200")->fetchAll();foreach($orders as&$o){$o['order_no']=$o['order_label'];unset($o['order_label']);$o['version']=(int)$o['version'];$s=$pdo->prepare('SELECT i.*,COALESCE((SELECT SUM(ri.quantity) FROM pos_sales_return_items ri WHERE ri.order_item_id=i.id),0) returned_quantity FROM pos_sales_order_items i WHERE i.order_id=? ORDER BY i.id');$s->execute([$o['id']]);$o['items']=$s->fetchAll();foreach($o['items']as&$i){$i['quantity']=(int)$i['quantity'];$i['returned_quantity']=(int)$i['returned_quantity'];}$s=$pdo->prepare("SELECT r.*,CONCAT('TH-',LPAD(r.return_no,5,'0')) return_label FROM pos_sales_returns r WHERE r.order_id=? ORDER BY r.posted_at");$s->execute([$o['id']]);$o['returns']=$s->fetchAll();foreach($o['returns']as&$r){$r['return_no']=$r['return_label'];unset($r['return_label']);$s=$pdo->prepare('SELECT order_item_id,quantity,restock_quantity FROM pos_sales_return_items WHERE return_id=?');$s->execute([$r['id']]);$r['items']=$s->fetchAll();}}return$orders;}
+    private function orders(\PDO$pdo,array$actor):array
+    {
+        $sql="SELECT o.*,CONCAT('DH-',LPAD(o.order_no,5,'0')) order_label,u.display_name creator_name FROM pos_sales_orders o JOIN pos_users u ON u.id=o.created_by WHERE o.status<>'deleted'".($actor['role']==='admin'?'':' AND o.created_by=?')." ORDER BY o.updated_at DESC LIMIT 500";
+        $statement=$pdo->prepare($sql);$statement->execute($actor['role']==='admin'?[]:[$actor['id']]);$orders=$statement->fetchAll();
+        foreach($orders as&$o){
+            $o['order_no']=$o['order_label'];unset($o['order_label']);$o['version']=(int)$o['version'];
+            $s=$pdo->prepare('SELECT i.*,COALESCE((SELECT SUM(ri.quantity) FROM pos_sales_return_items ri WHERE ri.order_item_id=i.id),0) returned_quantity FROM pos_sales_order_items i WHERE i.order_id=? ORDER BY i.id');
+            $s->execute([$o['id']]);$o['items']=$s->fetchAll();
+            foreach($o['items']as&$i){$i['quantity']=(int)$i['quantity'];$i['returned_quantity']=(int)$i['returned_quantity'];}
+            $s=$pdo->prepare('SELECT p.id,CAST(p.amount AS CHAR) amount,p.method,p.note,p.paid_at,u.display_name actor_name FROM pos_sales_payments p JOIN pos_users u ON u.id=p.created_by WHERE p.order_id=? ORDER BY p.paid_at,p.id');
+            $s->execute([$o['id']]);$o['payments']=$s->fetchAll();
+            $paidAmount=0;foreach($o['payments']as$payment)$paidAmount+=(int)$payment['amount'];
+            $o['paid_amount']=(string)$paidAmount;$o['outstanding_amount']=(string)max(0,(int)$o['total_amount']-$paidAmount);
+            $o['payment_status']=$paidAmount===0?'unpaid':($paidAmount<(int)$o['total_amount']?'partial':'paid');
+            $s=$pdo->prepare("SELECT r.*,CONCAT('TH-',LPAD(r.return_no,5,'0')) return_label FROM pos_sales_returns r WHERE r.order_id=? ORDER BY r.posted_at");
+            $s->execute([$o['id']]);$o['returns']=$s->fetchAll();
+            foreach($o['returns']as&$r){$r['return_no']=$r['return_label'];unset($r['return_label']);$s=$pdo->prepare('SELECT order_item_id,quantity,restock_quantity FROM pos_sales_return_items WHERE return_id=?');$s->execute([$r['id']]);$r['items']=$s->fetchAll();}
+        }
+        return$orders;
+    }
 }

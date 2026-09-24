@@ -20,13 +20,13 @@
 - [x] Hoàn thiện gửi SMTP tự chứa, không phụ thuộc package ngoài.
 - [x] Hoàn thiện tương tác form CRUD sản phẩm, upload ảnh và mã kính.
 - [x] Viết importer dry-run/apply cho snapshot tra cứu 44 SKU, 772 model và 88 ảnh.
-- [x] Kết nối MySQL local 8.0.46, tạo đủ 28 bảng và nhập thành công 44 SKU, 772 model, 88 quan hệ ảnh cùng 88 tệp ảnh.
+- [x] Kết nối MySQL local 8.0.46, tạo đủ schema nền và nhập thành công 44 SKU, 772 model, 88 quan hệ ảnh cùng 88 tệp ảnh. Migration production hiện tại tạo 30 bảng tính cả bảng theo dõi migration, sau khi bổ sung thanh toán nhiều đợt.
 - [ ] Viết importer cho sản phẩm marketing, tài khoản, liên hệ và dữ liệu app khi có quyền đọc DB nguồn/đích.
 - [x] Tách dữ liệu thành hai schema MySQL `oufeidun_web` và `oufeidun_app`, dùng chung máy chủ và tài khoản kết nối.
 - [x] Kiểm thử cách ly schema: web không thấy bảng app, app không thấy bảng web; migration chạy lại không tạo trùng.
 - [x] Smoke test route public, ba trang chi tiết sản phẩm, ảnh, tra cứu alias, form liên hệ, đăng nhập admin và API app.
 - [x] Xây API đăng nhập/session, workspace, mutation, báo cáo, nhân viên và ảnh cho app.
-- [ ] Thay adapter `src/data/client.ts` của app sau khi có URL API thử nghiệm.
+- [x] Hoàn thiện adapter `src/data/client.ts` cho PHP API và profile build production; chờ URL hosting thật để kiểm thử kết nối.
 - [ ] Import và đối chiếu dữ liệu app bán hàng từ Supabase.
 - [ ] Chạy visual regression desktop/mobile.
 - [ ] Chạy UAT và cutover production.

@@ -12,12 +12,15 @@ Mọi endpoint sau đăng nhập dùng header `Authorization: Bearer <access_tok
 | `app_ban_hang_read` | `GET /workspace` |
 | Lịch sử biến động kho | `POST /query` với `action=history` |
 | `app_ban_hang_write` | `POST /mutations` |
+| `app_ban_hang_order_features` | `POST /orders/features` |
 | `app_ban_hang_delete_product` | `POST /products/delete` |
 | `app_ban_hang_report` | `POST /reports` |
 | `app_ban_hang_manage_staff` | `POST /staff` |
 | Storage upload/remove/read | `/images` và `/images/{path}` |
 
 Payload mutation giữ nguyên `action`, `key` và các field hiện tại nên UI Electron không phải viết lại. Chỉ thay module `src/data/client.ts` từ Supabase SDK sang `fetch` API.
+
+`POST /orders/features` nhận `action=save` để lưu địa chỉ, loại khách, giá bán riêng, hàng tặng/mẫu và ghi chú dòng hàng; hoặc `action=payment` để ghi nhận từng đợt thanh toán.
 
 Các bảo vệ đã giữ lại trong backend PHP:
 

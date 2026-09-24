@@ -45,7 +45,7 @@
 
 - Source và media khoảng 38 MB.
 - `oufeidun_web` khoảng 80 MB: 44 mã kính, 772 model tương thích, 88 ảnh tra cứu và 3 sản phẩm marketing.
-- `oufeidun_app` đã có 19 bảng và API nghiệp vụ; dung lượng ban đầu dưới 1 MB trước khi nhập dữ liệu vận hành.
+- `oufeidun_app` có 19 bảng nghiệp vụ, cộng 1 bảng theo dõi migration; dung lượng ban đầu dưới 1 MB trước khi nhập dữ liệu vận hành.
 - Website có trang công khai, tra cứu mã kính, quản trị sản phẩm/mã kính/tin nhắn và API dành cho app bán hàng.
 
 ## Gói khuyến nghị
