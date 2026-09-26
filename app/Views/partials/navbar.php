@@ -1,7 +1,7 @@
 <?php $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'; ?>
 <header id="site-header" class="fixed left-0 right-0 top-0 z-50 py-4 transition-all duration-300">
   <div class="container-custom flex items-center justify-between">
-    <a href="/" class="flex items-center gap-2"><span class="text-3xl font-bold text-white drop-shadow-sm" data-logo>Oufeidun</span></a>
+    <a href="/" class="flex items-center gap-2" aria-label="Oufeidun - Trang chủ"><span class="inline-flex items-center" data-logo><img src="/images/brand/oufeidun-logo-transparent.png" alt="Oufeidun" width="120" height="40" class="h-8 w-auto object-contain sm:h-10"></span></a>
     <nav class="hidden items-center gap-1 xl:flex" aria-label="Điều hướng chính">
       <?php foreach ($site['navigation'] as $link): $active = $link['href']==='/' ? $path==='/' : str_starts_with($path, $link['href']); ?>
         <a href="<?= e($link['href']) ?>" class="relative whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition <?= $active ? 'bg-primary-50 text-primary-500' : 'text-white/90 hover:text-white' ?>" data-nav-link><?= e($link['label']) ?></a>
@@ -18,4 +18,3 @@
     <a href="/lien-he" class="mt-2 flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-5 py-3 font-semibold text-white">Đăng ký đại lý <?= icon('external','h-4 w-4') ?></a>
   </nav>
 </header>
-

@@ -5,7 +5,7 @@ return [
     'company' => [
         'name' => 'Oufeidun',
         'full_name' => 'CÔNG TY TNHH KÍNH CƯỜNG LỰC ĐIỆN THOẠI OUFEIDUN VIỆT NAM',
-        'description' => 'Chuyên sản xuất và phân phối kính cường lực điện thoại chất lượng cao. Chúng tôi đồng hành cùng các đại lý trên toàn quốc với sản phẩm chuẩn form, độ bền cao và dịch vụ tận tâm.',
+        'description' => 'Chuyên sản xuất OEM và phân phối kính cường lực Oufeidun chất lượng cao cho hệ thống đại lý toàn quốc.',
         'phone' => '037 2378 956',
         'phone_raw' => '0372378956',
         'email' => 'Oufeidun@gmail.com',
@@ -26,11 +26,34 @@ return [
         ['step' => 2, 'title' => 'Thiết kế bao bì & In logo', 'description' => 'Đội ngũ thiết kế chuyên nghiệp tạo ra mẫu bao bì độc đáo, in logo thương hiệu riêng theo yêu cầu của đối tác.'],
         ['step' => 3, 'title' => 'Sản xuất & Kiểm định chất lượng', 'description' => 'Theo dõi các công đoạn sản xuất và kiểm tra thành phẩm theo yêu cầu của từng đơn hàng.'],
         ['step' => 4, 'title' => 'Đóng gói & Giao hàng', 'description' => 'Hoàn thiện đóng gói và phối hợp phương án giao nhận theo số lượng, địa điểm của đơn hàng.'],
+        ['step' => 5, 'title' => 'Hỗ trợ quảng cáo', 'description' => 'Đẩy mạnh thương hiệu và sản phẩm của đối tác trên thị trường.'],
     ],
     'factory_videos' => [
         ['name' => 'day-chuyen-gia-cong', 'title' => 'Dây chuyền gia công', 'description' => 'Cận cảnh thiết bị và các thao tác trên dây chuyền sản xuất kính cường lực.'],
         ['name' => 'van-hanh-thiet-bi', 'title' => 'Vận hành thiết bị', 'description' => 'Góc nhìn thực tế về nhân sự và máy móc tại khu vực gia công.'],
         ['name' => 'khong-gian-nha-xuong', 'title' => 'Không gian nhà xưởng', 'description' => 'Theo dõi dãy thiết bị, khu vực làm việc và bố trí bên trong xưởng.'],
+        ['name' => 'nha-may-san-xuat-4', 'title' => 'Hoạt động sản xuất tại nhà máy', 'description' => 'Hình ảnh thực tế về quy trình vận hành và sản xuất tại nhà máy Oufeidun.', 'poster' => ''],
+        ['name' => 'nha-may-san-xuat-5', 'title' => 'Thiết bị sản xuất thực tế', 'description' => 'Theo dõi thiết bị và các công đoạn sản xuất kính cường lực tại nhà máy.', 'poster' => ''],
+    ],
+    'product_videos' => [
+        'kinh-cuong-luc-caballo-android' => [
+            'src' => '/videos/customer-2026-09/full-border-detail.mp4',
+            'type' => 'video/mp4',
+            'title' => 'Video kính cường lực full viền Oufeidun',
+            'poster' => '/images/products/customer-2026-09/full-border-1.png',
+        ],
+        'kinh-cuong-luc-oufeidun' => [
+            'src' => '/videos/customer-2026-09/privacy-detail.mp4',
+            'type' => 'video/mp4',
+            'title' => 'Video kính cường lực chống nhìn trộm Oufeidun',
+            'poster' => '/images/products/customer-2026-09/privacy-1.png',
+        ],
+        'kinh-cuong-luc-oufeidun-diamond' => [
+            'src' => '/videos/customer-2026-09/borderless-detail.mp4',
+            'type' => 'video/mp4',
+            'title' => 'Video kính cường lực không viền Oufeidun',
+            'poster' => '/images/products/customer-2026-09/borderless-1.png',
+        ],
     ],
     'testing_videos' => [
         ['name' => 'gia-cong-day-chuyen', 'title' => 'Gia công trên dây chuyền', 'description' => 'Quan sát kính được đưa qua thiết bị gia công tự động tại nhà xưởng.'],

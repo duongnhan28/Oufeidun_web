@@ -45,6 +45,9 @@ if (filter_var(Env::get('DB_CREATE_DATABASES', 'false'), FILTER_VALIDATE_BOOLEAN
 
 applyMigration(Database::connection(), BASE_PATH . '/database/migrations/001_website_schema.sql');
 applyMigration(Database::connection(), BASE_PATH . '/database/migrations/003_web_seed_products.sql');
+applyMigration(Database::connection(), BASE_PATH . '/database/migrations/005_customer_content_updates.sql');
+applyMigration(Database::connection(), BASE_PATH . '/database/migrations/006_customer_content_corrections.sql');
+applyMigration(Database::connection(), BASE_PATH . '/database/migrations/007_customer_media_updates.sql');
 applyMigration(Database::appConnection(), BASE_PATH . '/database/migrations/002_pos_schema.sql');
 applyMigration(Database::appConnection(), BASE_PATH . '/database/migrations/004_pos_order_sales_feedback.sql');
 
